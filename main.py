@@ -17,7 +17,7 @@ from tqdm import tqdm
 from sklearn.utils import shuffle
 from tensorlayer.layers import DenseLayer, EmbeddingInputlayer, Seq2Seq, retrieve_seq_length_op2
 
-from data.twitter import data
+from data.chat import pre
 
 sess_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
 
@@ -25,10 +25,10 @@ sess_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=Fal
 Training model [optional args]
 """
 @click.command()
-@click.option('-dc', '--data-corpus', default='twitter', help='Data corpus to use for training and inference',)
+@click.option('-dc', '--data-corpus', default='chat', help='Data corpus to use for training and inference',)
 @click.option('-bs', '--batch-size', default=32, help='Batch size for training on minibatches',)
 @click.option('-n', '--num-epochs', default=50, help='Number of epochs for training',)
-@click.option('-lr', '--learning-rate', default=0.001, help='Learning rate to use when training model',)
+@click.option('-lr', '--learning-rate', default=0.007, help='Learning rate to use when training model',)
 @click.option('-inf', '--inference-mode', is_flag=True, help='Flag for INFERENCE mode',)
 def train(data_corpus, batch_size, num_epochs, learning_rate, inference_mode):
 
@@ -42,7 +42,7 @@ def train(data_corpus, batch_size, num_epochs, learning_rate, inference_mode):
 
     n_step = src_len // batch_size
     src_vocab_size = len(metadata['idx2w']) # 8002 (0~8001)
-    emb_dim = 1024
+    emb_dim = 128
 
     word2idx = metadata['w2idx']   # dict  word 2 index
     idx2word = metadata['idx2w']   # list index 2 word
@@ -145,8 +145,8 @@ def train(data_corpus, batch_size, num_epochs, learning_rate, inference_mode):
             sentence = inference(input_seq)
             print(" >", ' '.join(sentence))
     else:
-        seeds = ["happy birthday have a nice day",
-                 "donald trump won last nights presidential debate according to snap online polls"]
+        seeds = ["FARMER ASKED ABOUT MARKET RATE OF PUMPKIN",
+                 "ASKED ABOUT BITTER GOURD PLKANTATION "]
         for epoch in range(num_epochs):
             trainX, trainY = shuffle(trainX, trainY, random_state=0)
             total_loss, n_iter = 0, 0
@@ -227,8 +227,8 @@ def create_model(encode_seqs, decode_seqs, src_vocab_size, emb_dim, is_train=Tru
 Initial Setup
 """
 def initial_setup(data_corpus):
-    metadata, idx_q, idx_a = data.load_data(PATH='data/{}/'.format(data_corpus))
-    (trainX, trainY), (testX, testY), (validX, validY) = data.split_dataset(idx_q, idx_a)
+    metadata, idx_q, idx_a = pre.load_data(PATH='data/{}/'.format(data_corpus))
+    (trainX, trainY), (testX, testY), (validX, validY) = pre.split_dataset(idx_q, idx_a)
     trainX = tl.prepro.remove_pad_sequences(trainX.tolist())
     trainY = tl.prepro.remove_pad_sequences(trainY.tolist())
     testX = tl.prepro.remove_pad_sequences(testX.tolist())
